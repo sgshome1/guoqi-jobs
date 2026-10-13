@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>央国企求职站（圭煜）· 央企/国企招聘公告与企业名录</title>
+<meta name="description" content="央国企专项求职平台：央企、省属国企、市属国企招聘公告每日更新，央企与各省国企名录一站查询。" />
+<meta name="author" content="圭煜" />
+<meta name="copyright" content="© 2026 圭煜 · 保留所有权利 · 未经授权禁止转载 / 售卖 / 商用" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23C1272D'/%3E%3Ctext x='32' y='43' font-size='32' text-anchor='middle' fill='white' font-family='sans-serif'%3E央%3C/text%3E%3C/svg%3E" />
+<link rel="stylesheet" href="./style.css?v=20261013-1503" />
+</head>
+<body>
+<div class="loadbar" id="loadbar" aria-hidden="true"><i></i></div>
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="#/home">
+      <span class="brand-logo">企</span>
+      <span class="brand-text"><b>央国企求职</b><small>圭煜 出品</small></span>
+    </a>
+    <nav class="topnav">
+      <a href="#/home" data-nav="home">首页</a>
+      <a href="#/notices" data-nav="notices">招聘公告</a>
+      <a href="#/companies" data-nav="companies">企业名录</a>
+      <a href="#/mine" data-nav="mine">我的</a>
+    </nav>
+    <div class="topbar-meta" id="topbarMeta"></div>
+  </div>
+</header>
+
+<main id="view" class="view"></main>
+
+<footer class="sitefoot">
+  <div class="sf-inner">
+    <div class="sf-seal" aria-hidden="true"><span>圭</span><span>煜</span></div>
+    <div class="sf-main">
+      <div class="sf-line"><b>央国企求职站</b> · 由 <b class="sf-author">圭煜</b> 独立设计、开发与维护</div>
+      <div class="sf-sub">© <span id="sfYear">2026</span> 圭煜 · 保留所有权利 · 非商业用途，仅供求职参考</div>
+      <div class="sf-links">
+        <a href="#/legal">免责声明 · 版权与防伪</a>
+        <a href="#/legal?sec=mark">正版标识与防伪说明</a>
+      </div>
+      <div class="sf-fpbox">
+        <span>版本指纹 <b id="sfFp">—</b></span>
+        <span>数据校验码 <b id="sfDh">—</b></span>
+        <span>本次访问追踪码 <b id="sfTr">—</b></span>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<div class="trace" id="trace" aria-hidden="true">圭煜 · 央国企求职站</div>
+
+<nav class="tabbar">
+  <a href="#/home" data-nav="home">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.8 12 3.4l9 7.4"/><path d="M5.6 9.6V20a1 1 0 0 0 1 1h10.8a1 1 0 0 0 1-1V9.6"/><path d="M9.8 21v-6h4.4v6"/></svg>
+    <span>首页</span>
+  </a>
+  <a href="#/notices" data-nav="notices">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4.5" y="3" width="15" height="18" rx="2.5"/><path d="M8.5 8h7M8.5 12h7M8.5 16h4.5"/></svg>
+    <span>招聘公告</span>
+  </a>
+  <a href="#/companies" data-nav="companies">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21V6.5L10.5 3v18"/><path d="M10.5 21H20V9.5h-9.5"/><path d="M6.8 9.5h1.2M6.8 13h1.2M6.8 16.5h1.2M13.8 13h1.4M13.8 16.5h1.4"/><path d="M2.5 21h19"/></svg>
+    <span>企业名录</span>
+  </a>
+  <a href="#/mine" data-nav="mine">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8.2" r="3.7"/><path d="M4.5 20.5c1.3-3.8 4.2-5.7 7.5-5.7s6.2 1.9 7.5 5.7"/></svg>
+    <span>我的</span>
+  </a>
+</nav>
+
+<button class="totop" id="toTop" aria-label="回到顶部" title="回到顶部">↑</button>
+
+<div id="overlay" class="overlay" hidden><div class="sheet" id="sheet"></div></div>
+<div id="toast" class="toast"></div>
+
+<script src="./static-api.js?v=20261013-1503"></script>
+<script src="./app.js?v=20261013-1503"></script>
+</body>
+</html>
