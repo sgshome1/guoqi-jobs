@@ -1464,7 +1464,8 @@ async function renderIndustry() {
   </div>`;
 }
 function emptyDataHTML(msg) {
-  return `<div class="empty"><div class="ico">🧰</div><p>${esc(msg)}</p><p class="tip">站点数据由本地服务提供，请先运行「启动预览.bat」再打开页面。</p></div>`;
+  const isGH = /\.github\.io$/i.test(location.hostname);
+  return `<div class="empty"><div class="ico">🧰</div><p>${esc(msg)}</p><p class="tip">${isGH ? '换个网络或刷新重试；若一直如此，请回首页重新进入。' : '站点数据由本地服务提供，请先运行「启动预览.bat」再打开页面。'}</p></div>`;
 }
 // 横向芯片行自动滚到当前选中项
 function scrollChipsActive() {
@@ -1851,7 +1852,13 @@ async function boot() {
       toTopBtn.classList.toggle('show', window.scrollY > 620);
     }
   } catch (e) {
-    view.innerHTML = `<div class="offline">
+    const isGH = /\.github\.io$/i.test(location.hostname);
+    view.innerHTML = isGH ? `<div class="offline">
+      <h2>链接可能不完整，请检查链接是否正确</h2>
+      <p>你打开的地址可能被截断、粘多了字符，或网络暂时不稳。</p>
+      <p class="tip">点下方按钮回首页，或重新复制完整网址再打开。</p>
+      <p class="off-btns"><a class="btn primary" href="https://${location.hostname}/guoqi-jobs/">回到网站首页</a><button class="btn ghost" onclick="location.reload()">重新加载</button></p>
+    </div>` : `<div class="offline">
       <h2>暂时连不上本地数据服务</h2>
       <p>请先双击运行「启动预览.bat」，再打开本页面。</p>
       <p class="tip">如果你是通过双击网页文件打开的，浏览器会因为安全限制拦下数据请求——用启动脚本打开就正常了。</p>

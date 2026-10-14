@@ -305,6 +305,7 @@ h1,h2,h3,p{margin:0}
 .offline h2{font-size:19px;margin-bottom:10px}
 .offline p{color:var(--ink-2);font-size:14px;margin-bottom:8px}
 .offline .tip{font-size:13px;color:var(--ink-3)}
+.off-btns{display:flex;gap:10px;justify-content:center;margin-top:14px;flex-wrap:wrap}
 
 /* ---------- 企业名录筛选（对齐旧站做法） ---------- */
 .searchrow2{display:flex;gap:10px;align-items:stretch;flex-wrap:wrap;margin-bottom:10px}
