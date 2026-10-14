@@ -40,6 +40,9 @@ h1,h2,h3,p{margin:0}
 .topnav a{padding:7px 15px;border-radius:999px;font-size:14px;color:var(--ink-2);transition:.15s}
 .topnav a:hover{color:var(--ink)}
 .topnav a.on{background:var(--red-l);color:var(--red);font-weight:600}
+.topnav a.nav-js{display:inline-flex;align-items:center;gap:6px;color:var(--red);font-weight:600}
+.topnav a.nav-js:hover{color:var(--red);background:var(--red-l)}
+.topnav a.nav-js i{font-style:normal;display:inline-flex;align-items:center;justify-content:center;width:17px;height:17px;border-radius:5px;background:var(--red);color:#fff;font-size:10.5px;font-weight:600;line-height:1;flex:none}
 .topbar-meta{margin-left:auto;font-size:12px;color:var(--ink-3);display:none}
 @media(min-width:760px){ .topnav{display:flex;gap:2px;margin-left:6px} }
 @media(min-width:980px){ .topbar-meta{display:block} }
