@@ -359,6 +359,7 @@ async function renderHome() {
           <a class="tool-tile" href="#/mine" data-act="mineTabGo" data-tab="favN"><span class="tt-ico">⭐</span><b>我的收藏</b><small>公告与企业</small></a>
         </div>
       </section>
+      <section class="card brief" id="briefCard"><div class="loading">早报加载中…</div></section>
       <section class="card follow" id="followCard">
         <div class="section-head"><h2>关注圭煜</h2><span class="sub">微信公众号 · 小红书 <b>官方唯二</b></span></div>
         <div class="fo-qrs">
@@ -373,7 +374,6 @@ async function renderHome() {
         </div>
         <p class="fo-safe">官方账号<b>只此两个</b>，谨防仿冒；点二维码看大图 · 任何「内推 / 保 offer」收费均与本站无关。</p>
       </section>
-      <section class="card brief" id="briefCard"><div class="loading">早报加载中…</div></section>
       <footer class="foot">
         <p>数据来自公开招聘渠道整理，仅供求职参考，投递前请以用人单位官方信息为准。</p>
         <p>数据更新于 <b>${m.generatedAt ? new Date(m.generatedAt).toLocaleString('zh-CN', { hour12: false }) : '—'}</b></p>
