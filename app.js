@@ -273,6 +273,7 @@ async function route() {
   navCount++;
   const { seg, arg } = parseHash();
   if (seg === 'notice' || seg === 'company' || seg === 'majorinfo' || seg === 'careerinfo') { openDetail(seg, arg); return; }
+  if (seg === 'follow') { openFollowSheet(); return; }
   loading(true);
   closeOverlay();
   closeCoSheet();
@@ -359,6 +360,20 @@ async function renderHome() {
         </div>
       </section>
       <section class="card brief" id="briefCard"><div class="loading">早报加载中…</div></section>
+      <section class="card follow" id="followCard">
+        <div class="section-head"><h2>关注圭煜</h2><span class="sub">微信公众号 · 小红书 <b>官方唯二</b></span></div>
+        <div class="fo-qrs">
+          <button class="fo-qr" data-act="openFollow" title="查看大图">
+            <img src="${QR_WECHAT}" alt="微信公众号「圭煜」二维码" />
+            <b>微信公众号</b><small>Guiyus01 · 发「圭煜的群」进群</small>
+          </button>
+          <button class="fo-qr" data-act="openFollow" title="查看大图">
+            <img src="${QR_XHS}" alt="小红书「圭煜」二维码" />
+            <b>小红书</b><small>Ss1127592272 · 动态与私信</small>
+          </button>
+        </div>
+        <p class="fo-safe">官方账号<b>只此两个</b>，谨防仿冒；点二维码看大图 · 任何「内推 / 保 offer」收费均与本站无关。</p>
+      </section>
       <footer class="foot">
         <p>数据来自公开招聘渠道整理，仅供求职参考，投递前请以用人单位官方信息为准。</p>
         <p>数据更新于 <b>${m.generatedAt ? new Date(m.generatedAt).toLocaleString('zh-CN', { hour12: false }) : '—'}</b></p>
@@ -1476,6 +1491,46 @@ function closeLayer() {
   if (layerStack !== null) { sheet.innerHTML = layerStack; layerStack = null; }
   else closeOverlay();
 }
+/* ---------- 关注圭煜：二维码（base64 内嵌，随站发布）与弹层 ---------- */
+const QR_WECHAT = 'data:image/png;base64,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';
+const QR_XHS = 'data:image/png;base64,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';
+function openFollowSheet() {
+  if (lastSeg) scrollPos[lastSeg] = window.scrollY;
+  overlay.hidden = false;
+  document.body.classList.add('locked');
+  layerStack = null;
+  sheet.innerHTML = `
+  <header class="sheet-head">
+    <button class="icon-btn" data-act="closeSheet" title="返回">‹</button>
+    <div class="sheet-head-title">关注圭煜</div>
+    <span class="head-pad"></span>
+  </header>
+  <div class="sheet-body">
+    <p class="fol-lead">更新通知、进群交流、报喜与纠错进度，都在这里；官方账号<b>只此两个</b>，谨防仿冒。</p>
+    <div class="fol-card">
+      <img class="fol-qr" src="${QR_WECHAT}" alt="微信公众号「圭煜」二维码" />
+      <div class="fol-meta">
+        <h4>微信公众号「圭煜」</h4>
+        <p>关注后发送「<b>圭煜的群</b>」，获取央国企交流群入口。</p>
+        <p class="fol-id">Guiyus01<button class="btn ghost fol-copy" data-act="copyText" data-text="Guiyus01" data-msg="公众号已复制：Guiyus01">复制</button></p>
+      </div>
+    </div>
+    <div class="fol-card">
+      <img class="fol-qr" src="${QR_XHS}" alt="小红书「圭煜」二维码" />
+      <div class="fol-meta">
+        <h4>小红书「圭煜」</h4>
+        <p>求职动态、上岸报喜与私信，都在小红书。</p>
+        <p class="fol-id">Ss1127592272<button class="btn ghost fol-copy" data-act="copyText" data-text="Ss1127592272" data-msg="小红书号已复制：Ss1127592272">复制</button></p>
+      </div>
+    </div>
+    <p class="fol-tip">手机看：长按二维码可保存或识别；电脑看：用手机微信 / 小红书扫码即可。</p>
+    <div class="fol-safe">官方账号只此两个：微信公众号「圭煜」（Guiyus01）、小红书「圭煜」（Ss1127592272）。<b>任何以「内推 / 保 offer」名义收费的都与本站无关。</b></div>
+  </div>
+  <footer class="sheet-foot">
+    <button class="btn primary grow" data-act="closeSheet">知道了</button>
+  </footer>`;
+  sheet.querySelector('.sheet-body').scrollTop = 0;
+}
 async function openApplyPicker(id) {
   let n = state.notice.list.find(x => String(x.id) === String(id))
     || state.applied.find(x => String(x.id) === String(id))
@@ -1600,6 +1655,13 @@ document.addEventListener('click', async e => {
     }
     case 'apply': await openApplyPicker(el.dataset.id); break;
     case 'layerClose': closeLayer(); break;
+    case 'openFollow': location.hash = '#/follow'; break;
+    case 'copyText': {
+      const txt = el.dataset.text || '';
+      try { await navigator.clipboard.writeText(txt); toast(el.dataset.msg || ('已复制：' + txt)); }
+      catch { window.prompt('复制下面的内容：', txt); }
+      break;
+    }
     case 'applySet': {
       const id = el.dataset.id, status = Number(el.dataset.status);
       let n = state.notice.list.find(x => String(x.id) === String(id))
