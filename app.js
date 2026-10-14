@@ -1856,6 +1856,17 @@ async function boot() {
       toTopBtn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
       toTopBtn.classList.toggle('show', window.scrollY > 620);
     }
+    const fab = document.querySelector('.follow-fab');
+    if (fab) {
+      let fabY = window.scrollY, fabUp = 0;
+      window.addEventListener('scroll', () => {
+        const y = window.scrollY;
+        if (y > fabY + 0.5) { fabUp = 0; if (y > 300) fab.classList.add('mini'); }
+        else if (y < fabY - 0.5) { fabUp += fabY - y; if (y < 240 || fabUp >= 140) fab.classList.remove('mini'); }
+        fabY = y;
+      }, { passive: true });
+      if (window.scrollY > 300) fab.classList.add('mini');
+    }
   } catch (e) {
     const isGH = /\.github\.io$/i.test(location.hostname);
     view.innerHTML = isGH ? `<div class="offline">
