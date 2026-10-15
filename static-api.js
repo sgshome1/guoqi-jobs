@@ -28,6 +28,46 @@
     return pending[name];
   }
 
+  /* ---------- 分片下载 + 浏览器级缓存（Cache API，命中即秒开；不支持的环境自动退化为普通请求） ---------- */
+  var CACHE_NAME = 'gq-data-v1';
+  function fetchJson(url) {
+    return fetch(url).then(function (r) {
+      if (!r.ok) throw new Error('HTTP ' + r.status + ' @ ' + url);
+      return r.json();
+    });
+  }
+  function cacheJson(url) {
+    if (!('caches' in window)) return fetchJson(url);
+    var req = new Request(url, { credentials: 'same-origin' });
+    return caches.open(CACHE_NAME).then(function (c) {
+      return c.match(req).then(function (hit) {
+        if (hit) return hit.json();
+        return fetch(req).then(function (r) {
+          if (!r.ok) throw new Error('HTTP ' + r.status + ' @ ' + url);
+          try { c.put(req, r.clone()); } catch (e) {}
+          return r.json();
+        });
+      });
+    }).catch(function () { return fetchJson(url); });
+  }
+  function fetchManifest(name) {
+    var bucket = Math.floor(Date.now() / 600000); /* 10 分钟一档：数据更新后最多 10 分钟生效 */
+    return fetchJson(D + name + '?v=' + bucket);
+  }
+  function pruneShards(dir, keep) {
+    if (!('caches' in window)) return;
+    caches.open(CACHE_NAME).then(function (c) {
+      c.keys().then(function (keys) {
+        keys.forEach(function (req) {
+          var u = req.url, i = u.indexOf(dir);
+          if (i < 0) return;
+          var name = u.slice(i + dir.length).split('?')[0];
+          if (!keep[name]) c.delete(req).catch(function () {});
+        });
+      });
+    }).catch(function () {});
+  }
+
   /* ---------- 工具（与本地服务保持一致） ---------- */
   var pad2 = function (x) { return x < 10 ? '0' + x : '' + x; };
   function todayStr() { var d = new Date(); return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate()); }
@@ -90,18 +130,36 @@
       supervisoryAuthority: c.supervisoryAuthority, hasRecruit: !!(c.recruitmentLink || c.website) };
   }
 
-  /* ---------- 公告索引（懒加载，进站后台预取） ---------- */
+  /* ---------- 公告索引（分片并发加载 + 浏览器缓存；进入公告页或后台预取时触发） ---------- */
   var idxRows = null, idxPending = null;
+  function rotateParts(parts, cols) {
+    var total = 0, i, j;
+    for (i = 0; i < parts.length; i++) total += parts[i].rows.length;
+    var out = new Array(total), w = 0;
+    for (i = 0; i < parts.length; i++) {
+      var rows = parts[i].rows;
+      for (j = 0; j < rows.length; j++) {
+        var r = rows[j], o = {};
+        for (var k = 0; k < cols.length; k++) o[cols[k]] = r[k];
+        out[w++] = o;
+      }
+    }
+    return out;
+  }
   function ensureIndex() {
     if (idxRows) return Promise.resolve(idxRows);
     if (!idxPending) {
-      idxPending = jf('notices/index.json').then(function (raw) {
-        var cols = raw.cols, rows = raw.rows, out = new Array(rows.length);
-        for (var i = 0; i < rows.length; i++) {
-          var r = rows[i], o = {};
-          for (var k = 0; k < cols.length; k++) o[cols[k]] = r[k];
-          out[i] = o;
-        }
+      idxPending = fetchManifest('notices/idx/manifest.json').then(function (mf) {
+        if (!mf || !mf.parts || !mf.parts.length) throw new Error('索引清单无效');
+        var keep = {};
+        mf.parts.forEach(function (h) { keep[h + '.json'] = 1; });
+        pruneShards('data/notices/idx/', keep);
+        return Promise.all(mf.parts.map(function (h) { return cacheJson(D + 'notices/idx/' + h + '.json'); }))
+          .then(function (parts) { return rotateParts(parts, mf.cols); });
+      }).catch(function () {
+        /* 回退：旧的单文件索引（兼容兜底） */
+        return cacheJson(D + 'notices/index.json').then(function (raw) { return rotateParts([raw], raw.cols); });
+      }).then(function (out) {
         idxRows = out;
         fixNfacets(out);
         return out;
@@ -203,11 +261,28 @@
     });
   }
 
-  /* ---------- 企业详情相关公告 ---------- */
-  var companiesCache = null;
+  /* ---------- 企业名录（分片并发加载 + 浏览器缓存） ---------- */
+  var companiesCache = null, coPending = null;
   function loadCompanies() {
     if (companiesCache) return Promise.resolve(companiesCache);
-    return jf('companies.json').then(function (arr) { companiesCache = arr; return arr; });
+    if (!coPending) {
+      coPending = fetchManifest('companies/c/manifest.json').then(function (mf) {
+        if (!mf || !mf.parts || !mf.parts.length) throw new Error('企业清单无效');
+        var keep = {};
+        mf.parts.forEach(function (h) { keep[h + '.json'] = 1; });
+        pruneShards('data/companies/c/', keep);
+        return Promise.all(mf.parts.map(function (h) { return cacheJson(D + 'companies/c/' + h + '.json'); }));
+      }).catch(function () {
+        /* 回退：旧的单文件企业名录 */
+        return cacheJson(D + 'companies.json').then(function (arr) { return [arr]; });
+      }).then(function (parts) {
+        var out = [], i, j;
+        for (i = 0; i < parts.length; i++) for (j = 0; j < parts[i].length; j++) out.push(parts[i][j]);
+        companiesCache = out;
+        return out;
+      }).catch(function (e) { coPending = null; throw e; });
+    }
+    return coPending;
   }
   function companyNotices(c, notices) {
     var core = coreName(c.companyName);
@@ -256,6 +331,20 @@
         });
       });
     }
+    /* 首屏快照：默认视图第一页先秒出，全量分片同时在后台加载（供筛选/翻页） */
+    if (page === 1 && !hasFilter && size <= 20) {
+      return fetchManifest('notices/page1.json').then(function (p1) {
+        if (!p1 || !p1.list || !p1.list.length) throw new Error('首屏快照无效');
+        ensureIndex().catch(function () {});
+        return { total: p1.total, mix: p1.mix, page: 1, size: size, list: p1.list.slice(0, size) };
+      }).catch(function () { return null; }).then(function (fast) {
+        if (fast) return fast;
+        return ensureIndex().then(function (notices) {
+          var ctx = statusCtx();
+          return { total: notices.length, mix: nStatusMix(notices, ctx.T, ctx.S), page: 1, size: size, list: notices.slice(0, size).map(compact) };
+        });
+      });
+    }
     return ensureIndex().then(function (notices) {
       var ctx = statusCtx();
       var list = filterNotices(sp, notices);
@@ -269,6 +358,22 @@
     var q = (sp.get('q') || '').trim().toLowerCase();
     var cat = sp.get('cat') || '', group = sp.get('group') || '', prov = sp.get('prov') || '', city = sp.get('city') || '';
     var div = sp.get('div') || '', scale = sp.get('scale') || '', auth = sp.get('auth') || '', ids = sp.get('ids') || '', sort = sp.get('sort') || '';
+    var hasFilter = !!(q || cat || group || prov || city || div || scale || auth || ids || sort);
+    /* 首屏快照：默认视图第一页先秒出，全量分片同时在后台加载（供筛选/翻页） */
+    if (page === 1 && !hasFilter && size <= 20) {
+      return fetchManifest('companies/page1.json').then(function (p1) {
+        if (!p1 || !p1.list || !p1.list.length) throw new Error('首屏快照无效');
+        loadCompanies().catch(function () {});
+        return { total: p1.total, page: 1, size: size, mix: p1.mix, list: p1.list.slice(0, size) };
+      }).catch(function () { return null; }).then(function (fast) {
+        if (fast) return fast;
+        return loadCompanies().then(function (companies) {
+          var mix = { central: 0, provincial: 0, municipal: 0 };
+          for (var i = 0; i < companies.length; i++) mix[coGroupOf(companies[i])]++;
+          return { total: companies.length, page: 1, size: size, mix: mix, list: companies.slice(0, size).map(coCompact) };
+        });
+      });
+    }
     return loadCompanies().then(function (companies) {
       var list = companies;
       if (cat) list = list.filter(function (c) { return c.categoryGroup === cat || c.categoryGroupId === cat; });
@@ -329,6 +434,12 @@
     } catch (e) { return Promise.reject(e); }
   };
 
-  /* 进站后悄悄把公告索引取回来（首页本身用预生成的小文件，不受影响） */
-  setTimeout(function () { ensureIndex().catch(function () {}); }, 1200);
+  /* 首屏完成约 6 秒后再悄悄预取公告索引（避免与首屏抢带宽）；企业数据等进入名录页再取。
+     公告页/名录页的默认视图由预生成快照秒开，全量数据在后台分片下载并缓存（Cache API），
+     之后访问命中缓存秒开；数据更新后只有内容变化的片需要重新下载。 */
+  function schedulePrefetch() {
+    setTimeout(function () { ensureIndex().catch(function () {}); }, 6000);
+  }
+  if (document.readyState === 'complete') schedulePrefetch();
+  else window.addEventListener('load', schedulePrefetch);
 })();
